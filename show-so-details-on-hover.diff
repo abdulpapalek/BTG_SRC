@@ -1,0 +1,613 @@
+diff --git a/api/serializers.py b/api/serializers.py
+index 9c31804..6bfe1eb 100644
+--- a/api/serializers.py
++++ b/api/serializers.py
+@@ -294,7 +294,7 @@ class ServiceOrderListSerializer(BaseServiceOrderSerializer):
+         model = ServiceOrders
+         fields = (
+             'sonumber', 'account', 'briefdescription', 'datetime_received', 'priority', 'contact',
+-            'techassigned', 'simple_status'  # , 'sla_met'
++            'techassigned', 'simple_status','estimatedhrs', 'estimatedmins'  # , 'sla_met'
+         )
+
+
+diff --git a/api/view_sets.py b/api/view_sets.py
+index 70ba72c..dcd9479 100644
+--- a/api/view_sets.py
++++ b/api/view_sets.py
+@@ -33,10 +33,10 @@ from api.utils import build_preview_response_dict
+ from tigerpaw.models import (
+     ServiceOrders, Accounts, TimeLogReasons, Priorities, Reps, SOStatuses, Contacts, AccountSystems, Systems,
+     SOTypes, SOTechsAssigned, Expenses, ExpenseTypes, Contract, LaborRateCategories, Project, ProjectPhaseAssignment,
+-    Documents, CustomerAsset
++    Documents, CustomerAsset, SOLogs
+ )
+
+-from tigerpaw.utils import get_user_rep
++from tigerpaw.utils import get_user_rep, serialize_work_performed
+ from tigerpaw.soap import TigerpawSoap
+ from time_management.models import TimeEntry, UserProfile, PPLogEntry, ServiceZoneAlertNotificationSetting
+ from time_management.utils import get_rep_weekly_time_entries, get_rep_piechart_data
+@@ -445,6 +445,17 @@ class ServiceOrderViewSet(EnhancedModelViewSet):
+         data = ServiceOrderDetailsSerializer(so).data
+         return Response(data)
+
++    @detail_route(methods=['get'])
++    def fetch_so_log(self, request, pk=None):
++        all_sologs = SOLogs.objects.filter(sonumber=pk)[:3]
++        work_performed = [
++            dict(serialize_work_performed(log), internal=False) for log in all_sologs
++        ]
++        timeline = work_performed
++        timeline.sort(key=lambda x: x['timestamp'] if x['timestamp'] else datetime.min,
++                      reverse=True)
++        return Response(timeline)
++
+     def _create_update_service_order(self, account, techassigned, contactnumber, internal_comments, description, priority,
+                                      workrequested, type, system, zone, associatedtechs, status, sonumber=None):
+         rep = get_user_rep(self.request)
+@@ -499,7 +510,6 @@ class ServiceOrderViewSet(EnhancedModelViewSet):
+         new_so.save()
+         return so_id
+
+-
+ class ProjectViewSet(EnhancedModelViewSet):
+     queryset = Project.objects.all()
+     serializer_class = SimpleProjectSerializer
+diff --git a/package.json b/package.json
+index f17ad9d..2cb74f2 100644
+--- a/package.json
++++ b/package.json
+@@ -50,6 +50,7 @@
+     "react-tabs": "0.8.3",
+     "react-toastr": "2.8.2",
+     "react-transition-group": "1.2.0",
++    "react-tippy": "1.2.2",
+     "redux": "~3.7.2",
+     "redux-raven-middleware": "^1.2.0",
+     "redux-thunk": "~2.2.0",
+diff --git a/static/js/customer/components/details.jsx b/static/js/customer/components/details.jsx
+index c7a5ca8..c29237d 100644
+--- a/static/js/customer/components/details.jsx
++++ b/static/js/customer/components/details.jsx
+@@ -166,7 +166,10 @@ let CustomerServiceOrders = React.createClass({
+                 rows.push(
+                     <DefaultServiceOrderTableRow key={so.sonumber} so={so} showTechAssigned merging={that.state.merging}
+                                                  selectedForMerge={that.state.mergingSos[so.sonumber]}
+-                                                 onMergeClick={that.onMergeClick} onRefresh={that.onRefresh}/>
++                                                 onMergeClick={that.onMergeClick} onRefresh={that.onRefresh}
++                                                 sologs={that.props.sologs}
++                                                 fetchSOLog={that.props.fetchSOLog}
++                                                 clearSOLog={that.props.clearSOLog}/>
+                 );
+             });
+         }
+@@ -747,7 +750,10 @@ module.exports = React.createClass({
+                         <CustomerServiceOrders customerNumber={this.props.number}
+                                                submitMergeServiceOrders={this.props.submitMergeServiceOrders}
+                                                fetchCustomerServiceOrders={this.props.fetchCustomerServiceOrders}
+-                                               serviceorders={this.props.customer.serviceorders}/>
++                                               serviceorders={this.props.customer.serviceorders}
++                                               sologs={this.props.serviceorder.sologs}
++                                               fetchSOLog={this.props.fetchSOLog}
++                                               clearSOLog={this.props.clearSOLog}/>
+                     </ContentWrapper>
+                 </Loader>
+             </PageTitle>
+diff --git a/static/js/customer/containers.jsx b/static/js/customer/containers.jsx
+index a1e59c2..319c1ba 100644
+--- a/static/js/customer/containers.jsx
++++ b/static/js/customer/containers.jsx
+@@ -4,7 +4,8 @@ var ReactRedux = require("react-redux"),
+     actions = require("./actions"),
+     soActions = require("./../serviceorder/actions"),
+     timeEntryActions = require('./../timeentry/actions'),
+-    contractActions = require('./../contract/actions');
++    contractActions = require('./../contract/actions'),
++    serviceOrderActions = require('./../serviceorder/actions');
+
+ var mapStateToProps = function (state, props) {
+     return {user: state.user, customer: state.customer, serviceorder: state.serviceorder, timeentry: state.timeentry,contract: state.contract}
+@@ -49,6 +50,12 @@ var mapDispatchToProps = function (dispatch) {
+         },
+         fetchCustomerAssets (customerNumber, query, pageNumber, ordering) {
+             dispatch(actions.fetchCustomerAssets(customerNumber, query, pageNumber, ordering));
++        },
++        fetchSOLog(sonumber){
++            dispatch(serviceOrderActions.fetchSOLog(sonumber));
++        },
++        clearSOLog(){
++            dispatch(serviceOrderActions.clearSOLog());
+         }
+     }
+ };
+diff --git a/static/js/initial_state.js b/static/js/initial_state.js
+index e987b90..b773aac 100644
+--- a/static/js/initial_state.js
++++ b/static/js/initial_state.js
+@@ -79,6 +79,11 @@ module.exports = function () {
+                 loading: true,
+                 results: []
+             },
++            sologs:{
++                initLoad:true,
++                loading: true,
++                results: []
++            },
+             posting_form: false
+         },
+         contract: {
+diff --git a/static/js/serviceorder/actions.js b/static/js/serviceorder/actions.js
+index f1568fd..ca72e7e 100644
+--- a/static/js/serviceorder/actions.js
++++ b/static/js/serviceorder/actions.js
+@@ -32,7 +32,7 @@ module.exports = {
+         return function (dispatch, getState) {
+             var url = '/api/serviceorder/';
+             dispatch({type: constants.FETCH_ALL_SERVICEORDERS_TRY});
+-            $.get(url, {page: pageNumber, show_closed: showClosed}).done(function (data) {
++            $.get(url, {page: pageNumber, show_closed: showClosed, sologs: true}).done(function (data) {
+                 dispatch({type: constants.FETCH_ALL_SERVICEORDERS_DONE, data: data});
+             }).fail(function (data) {
+                 dispatch({type: constants.FETCH_ALL_SERVICEORDERS_FAIL});
+@@ -363,5 +363,20 @@ module.exports = {
+             });
+         };
+     },
++    fetchSOLog: function (sonumber) {
++        return function (dispatch,getState) {
++            var url = '/api/serviceorder/' + sonumber + "/fetch_so_log/"
++            $.get(url).done(function (data) {
++                dispatch({type: constants.FETCH_SOLOGS_DONE, data: data});
++            }).fail(function (data) {
++                dispatch({type: constants.FETCH_SOLOGS_FAIL});
++            });
++        };
++    },
++    clearSOLog: function () {
++        return function (dispatch,getState) {
++            dispatch({type: constants.CLEAR_SOLOGS_TRY});
++        };
++    },
+ };
+
+diff --git a/static/js/serviceorder/components/common.jsx b/static/js/serviceorder/components/common.jsx
+index 5bbe577..d0f079e 100644
+--- a/static/js/serviceorder/components/common.jsx
++++ b/static/js/serviceorder/components/common.jsx
+@@ -8,6 +8,11 @@ import {ContactEmailButton, ContactPhoneButton} from './../../customer/component
+ import {ContactCard} from './../../customer/components/contactcard';
+ import {SOActionsCog} from './actions_cog';
+ import FontAwesome from 'react-fontawesome';
++import '../../../scss/_react_tippy.scss';
++import {Tooltip} from 'react-tippy';
++import {HoverDetails} from './hover_details';
++
++var store = require('./../../store');
+
+ let ShowClosedSOsToggle = function (props) {
+     return (
+@@ -128,13 +133,28 @@ let ServiceOrderInfoTD = function (props) {
+
+             <div style={{marginLeft: "40px"}}>
+                 <span className="info-sonumber">
+-                    <Link to={url} title={props.so.briefdescription}>{shortdescription}</Link>
++
++                    <Tooltip trigger="mouseenter" delay={500}
++                             inertia={true} animation="perspective" position="bottom"
++                             unmountHTMLWhenHide={true}
++                             html={(
++                                    <div>
++                                        <HoverDetails store={store} so={props.so}
++                                                      sologs={props.sologs}
++                                                      fetchSOLog={props.fetchSOLog}
++                                                      clearSOLog={props.clearSOLog}/>
++                                    </div>
++                             )}
++                    >
++                        <Link to={url}>{shortdescription}</Link>
++                    </Tooltip>
+                 </span>
+                 <small>{props.so.sonumber}</small>
+             </div>
+         </td>
+     )
+ };
++
+ let SLAIcon = function (props) {
+     if (props.sla_met) {
+         return <FontAwesome className="sla_icon" name="check"/>
+@@ -175,7 +195,8 @@ let DefaultServiceOrderTableRow = function (props) {
+                            onClick={() => props.onMergeClick(props.so.sonumber)} />
+                 </td>
+             )}
+-            <ServiceOrderInfoTD so={props.so} onRefresh={props.onRefresh} />
++            <ServiceOrderInfoTD so={props.so} onRefresh={props.onRefresh} sologs={props.sologs}
++                                fetchSOLog={props.fetchSOLog} clearSOLog={props.clearSOLog}/>
+             {props.showAccount ?
+                 <td style={{minWidth: "80px"}}>
+                     <Link to={"/customer/" + props.so.account.number} title={props.so.account.name}>
+diff --git a/static/js/serviceorder/components/hover_details.jsx b/static/js/serviceorder/components/hover_details.jsx
+new file mode 100644
+index 0000000..2c7ce0c
+--- /dev/null
++++ b/static/js/serviceorder/components/hover_details.jsx
+@@ -0,0 +1,111 @@
++import React from 'react';
++import {Link} from 'react-router';
++import {Col, Row} from 'react-bootstrap';
++import {ContactPhoneButton} from './../../customer/components/contactbuttons';
++import {
++       IBox, Loader, Linebreaks, Table, TableHeader
++} from './../../main/components/common';
++
++const HoverDetails = React.createClass({
++    getInitialState: function () {
++      this.props.clearSOLog();
++      return {}
++    },
++    componentDidMount: function() {
++      this.props.fetchSOLog(this.props.so.sonumber);
++    },
++    render: function () {
++        var timelineItems = [];
++        var index = 0;
++        var empty = true;
++        this.props.sologs.results.forEach(function (item) {
++            timelineItems.push(
++                <tr key={"timelineItem" + index} className="elementToHover">
++                    <td>{item.timestamp_text}</td>
++                    <td>{item.user}</td>
++                    <td style={{width: '70%'}}>
++                        <span className="label pull-right" title={item.reason}>
++                                <small>
++                                    {item.hours}h {item.minutes}m
++                                </small>
++                        </span>
++                        <small>
++                            <Linebreaks text={item.description} maxLines={8}/>
++                        </small>
++                    </td>
++                </tr>
++            );
++            ++index;
++        });
++        if (index){
++            empty = false;
++        }
++        var columnHeaders = ["When", "Who", (
++            <span>
++                What&nbsp;
++            </span>
++        )];
++        return (
++                <Row>
++                    <Col sm={12} md={6} lg={4}>
++                        <dl className="dl-horizontal">
++                            <dt>Customer</dt>
++                            <dd>
++                                <small>
++                                    <Link to={"/customer/" + this.props.so.account.number}>
++                                        {this.props.so.account.name} ({this.props.so.account.code})
++                                    </Link>
++                                    {this.props.so.accountphone && (
++                                        <span>
++                                            &nbsp;<ContactPhoneButton contact={{telephone: this.props.so.accountphone}} />
++                                        </span>
++                                    )}
++                                </small>
++                            </dd>
++                            <dt>Brief Desc.</dt><dd><small>{this.props.so.briefdescription}</small></dd>
++                            <dt>Zone</dt><dd><small>{this.props.so.servicezone}</small></dd>
++                        </dl>
++                    </Col>
++                    <Col sm={12} md={6} lg={4}>
++                        <dl className="dl-horizontal">
++                            <dt>Type</dt><dd><small>{this.props.so.sotype}</small></dd>
++                            <dt>Received</dt><dd>{this.props.so.datetime_received}</dd>
++                            <dt>Priority</dt><dd><small>{this.props.so.priority}</small></dd>
++                            <dt>Ref No.</dt><dd><small>{this.props.so.reference}</small></dd>
++                            <dt>System</dt><dd><small>{this.props.so.system}</small></dd>
++                            <dt>Customer PO</dt><dd><small>{this.props.so.customerpo}</small></dd>
++                        </dl>
++                    </Col>
++                    <Col sm={12} md={6} lg={4}>
++                        <dl className="dl-horizontal">
++                            <dt>Primary Technician</dt>
++                            <dd>
++                                <small>{this.props.so.techassigned ? this.props.so.techassigned.fullname : ""}</small>
++                            </dd>
++                            <dt>Estimated Time</dt>
++                            <dd><small>{this.props.so.estimatedhrs}h {this.props.so.estimatedmins}m</small></dd>
++                        </dl>
++                    </Col>
++                    <div style={{padding:"15px"}}>
++                        <Loader loaded={!this.props.sologs.loading}>
++                            {empty ?
++                                ' ' :
++                                <Col lg={12}>
++                                    <dl className="dl-horizontal">
++                                        <IBox>
++                                            <Table hover={true} striped={true} responsive={true} headers={columnHeaders}>
++                                                {timelineItems}
++                                            </Table>
++                                        </IBox>
++                                    </dl>
++                                </Col>
++                            }
++                        </Loader>
++                    </div>
++                </Row>
++        )
++    }
++});
++
++
++module.exports = {HoverDetails: HoverDetails};
+\ No newline at end of file
+diff --git a/static/js/serviceorder/components/list.jsx b/static/js/serviceorder/components/list.jsx
+index e6cdba4..a50c840 100644
+--- a/static/js/serviceorder/components/list.jsx
++++ b/static/js/serviceorder/components/list.jsx
+@@ -80,7 +80,10 @@ module.exports = React.createClass({
+         let rows = [];
+         for (let so of this.props.serviceorder.filtered.results) {
+             rows.push(
+-                <DefaultServiceOrderTableRow key={so.sonumber} so={so} showAccount onRefresh={this.onRefresh} />
++                <DefaultServiceOrderTableRow key={so.sonumber} so={so} showAccount onRefresh={this.onRefresh}
++                                             sologs={this.props.serviceorder.sologs}
++                                             fetchSOLog={this.props.fetchSOLog}
++                                             clearSOLog={this.props.clearSOLog}/>
+             );
+         }
+         return rows;
+diff --git a/static/js/serviceorder/components/mysos.jsx b/static/js/serviceorder/components/mysos.jsx
+index c29d953..3df32b2 100644
+--- a/static/js/serviceorder/components/mysos.jsx
++++ b/static/js/serviceorder/components/mysos.jsx
+@@ -40,7 +40,10 @@ module.exports = React.createClass({
+                 rows.push(<ServiceOrderTableRowHeader key="title3" title={so.team_so + " (Unassigned)"} />);
+             }
+             rows.push(
+-                <DefaultServiceOrderTableRow key={so.sonumber} so={so} showAccount onRefresh={self.onRefresh} />
++                <DefaultServiceOrderTableRow key={so.sonumber} so={so} showAccount onRefresh={self.onRefresh}
++                                             sologs={self.props.serviceorder.sologs}
++                                             fetchSOLog={self.props.fetchSOLog}
++                                             clearSOLog={self.props.clearSOLog}/>
+             );
+         });
+         return (
+diff --git a/static/js/serviceorder/constants.js b/static/js/serviceorder/constants.js
+index 61a896a..86e8e7a 100644
+--- a/static/js/serviceorder/constants.js
++++ b/static/js/serviceorder/constants.js
+@@ -32,6 +32,11 @@ module.exports = {
+     FETCH_SERVICEORDER_STATUSES_DONE:"FETCH_SERVICE_ORDER_STATUSES_DONE",
+     FETCH_SERVICEORDER_STATUSES_FAIL:"FETCH_SERVICE_ORDER_STATUSES_FAIL",
+
++    FETCH_SOLOGS_DONE:"FETCH_SOLOGS_DONE",
++    FETCH_SOLOGS_FAIL:"FETCH_SOLOGS_FAIL",
++
++    CLEAR_SOLOGS_TRY:"CLEAR_SOLOGS_TRY",
++
+     UPDATE_SERVICE_ORDER_STATUS_TRY:"UPDATE_SERVICE_ORDER_STATUS_TRY",
+     UPDATE_SERVICE_ORDER_STATUS_DONE:"UPDATE_SERVICE_ORDER_STATUS_DONE",
+     UPDATE_SERVICE_ORDER_STATUS_FAIL:"UPDATE_SERVICE_ORDER_STATUS_FAIL",
+diff --git a/static/js/serviceorder/containers.jsx b/static/js/serviceorder/containers.jsx
+index b9f1fb9..ab85c3c 100644
+--- a/static/js/serviceorder/containers.jsx
++++ b/static/js/serviceorder/containers.jsx
+@@ -79,6 +79,12 @@ var mapDispatchToProps = function (dispatch) {
+         },
+         serviceOrderTeamBoard(team){
+             dispatch(actions.serviceOrderTeamBoard(team));
++        },
++        fetchSOLog(sonumber){
++            dispatch(actions.fetchSOLog(sonumber));
++        },
++        clearSOLog(){
++            dispatch(actions.clearSOLog());
+         }
+     }
+ };
+diff --git a/static/js/serviceorder/reducer.js b/static/js/serviceorder/reducer.js
+index 794245b..aac5fe0 100644
+--- a/static/js/serviceorder/reducer.js
++++ b/static/js/serviceorder/reducer.js
+@@ -14,7 +14,7 @@ module.exports = function (state, action) {
+
+     var newstate = Object.assign({}, state);
+     switch (action.type) {
+-
++
+         case constants.CLEAR_ALL_PAGES_TRY:
+             newstate.current.loading = true;
+             newstate.my.loading = true;
+@@ -224,6 +224,19 @@ module.exports = function (state, action) {
+         case constants.FETCH_SERVICEORDER_STATUSES_DONE:
+             newstate.statuses = action.data;
+             return newstate;
++
++        case constants.FETCH_SOLOGS_DONE:
++            newstate.sologs.results = action.data;
++            newstate.sologs.loading = false;
++            newstate.sologs.initLoad = false;
++            return newstate;
++
++        case constants.CLEAR_SOLOGS_TRY:
++            newstate.sologs.results = [];
++            newstate.sologs.loading = true;
++            newstate.sologs.initLoad = true;
++            return newstate;
++
+         default:
+             return state || initialState
+     }
+diff --git a/static/js/store.js b/static/js/store.js
+index 0061696..2b83c71 100644
+--- a/static/js/store.js
++++ b/static/js/store.js
+@@ -13,4 +13,4 @@ if (process.env.NODE_ENV != 'production') {
+ else {
+     Raven.config('https://obscured@sentry.io/244069').install();
+     module.exports = Redux.applyMiddleware(thunk, RavenMiddleware('https://obscured@sentry.io/'))(Redux.createStore)(rootReducer, initialState());
+-}
+\ No newline at end of file
++}
+diff --git a/static/js/user/components/myteam.jsx b/static/js/user/components/myteam.jsx
+index d420594..dd4b2df 100644
+--- a/static/js/user/components/myteam.jsx
++++ b/static/js/user/components/myteam.jsx
+@@ -146,7 +146,10 @@ let MyTeamServiceOrders = React.createClass({
+     render: function () {
+         let rows = this.props.serviceorders.results && this.props.serviceorders.results.map(
+             so => <DefaultServiceOrderTableRow key={so.sonumber} so={so} showAccount showTechAssigned
+-                                               onRefresh={this.onRefresh}/>
++                                               onRefresh={this.onRefresh}
++                                               sologs={this.props.sologs}
++                                               fetchSOLog={this.props.fetchSOLog}
++                                               clearSOLog={this.props.clearSOLog}/>
+         );
+
+         let teamChanger = null;
+@@ -260,7 +263,10 @@ module.exports = React.createClass({
+                                          zones={this.state.zones}
+                                          initialTechAssigned={this.state.initialTechAssigned}
+                                          onRefresh={this.onRefresh} serviceorders={this.props.serviceorder.my_team}
+-                                         team={this.props.user.team} profile={this.props.user.profile}/>
++                                         team={this.props.user.team} profile={this.props.user.profile}
++                                         sologs={this.props.serviceorder.sologs}
++                                         fetchSOLog={this.props.fetchSOLog}
++                                         clearSOLog={this.props.clearSOLog}/>
+                 </Loader> : <ErrorMessage/>
+         )
+     }
+diff --git a/static/js/user/containers.jsx b/static/js/user/containers.jsx
+index edc8c79..52c317b 100644
+--- a/static/js/user/containers.jsx
++++ b/static/js/user/containers.jsx
+@@ -34,6 +34,12 @@ var mapDispatchToProps = function (dispatch) {
+             dispatch(serviceOrderActions.fetchMyTeamServiceOrders(
+                 query, pageNumber, showClosed, ordering, techAssigned, team
+             ))
++        },
++        fetchSOLog(sonumber){
++            dispatch(serviceOrderActions.fetchSOLog(sonumber));
++        },
++        clearSOLog(){
++            dispatch(serviceOrderActions.clearSOLog());
+         }
+     }
+ };
+diff --git a/static/scss/_react_tippy.scss b/static/scss/_react_tippy.scss
+new file mode 100644
+index 0000000..4bd4d08
+--- /dev/null
++++ b/static/scss/_react_tippy.scss
+@@ -0,0 +1,106 @@
++.tippy-touch {
++    cursor: pointer!important;
++}
++.tippy-notransition {
++    transition: none!important;
++}
++.tippy-popper {
++    max-width: inherit;
++    -webkit-perspective: inherit;
++    perspective: inherit;
++    z-index: 9999;
++    outline: 0;
++    transition-timing-function: cubic-bezier(.165, .84, .44, 1);
++    pointer-events: none;
++}
++.tippy-popper.html-template {
++    max-width: inherit;
++    background-color: #9b9b9b;
++}
++.tippy-popper[x-placement^=top] [data-animation=perspective] {
++    -webkit-transform-origin: bottom;
++    transform-origin: bottom;
++}
++.tippy-popper[x-placement^=top] [data-animation=perspective].enter {
++    opacity: 1;
++    -webkit-transform: translateY(-10px) rotateX(0);
++    transform: translateY(-10px) rotateX(0);
++}
++.tippy-popper[x-placement^=top] [data-animation=perspective].leave {
++    opacity: 0;
++    -webkit-transform: translateY(0) rotateX(90deg);
++    transform: translateY(0) rotateX(90deg);
++}
++.tippy-popper[x-placement^=bottom] [data-animation=perspective] {
++    -webkit-transform-origin: top;
++    transform-origin: top;
++}
++.tippy-popper[x-placement^=bottom] [data-animation=perspective].enter {
++    opacity: 1;
++    -webkit-transform: translateY(10px) rotateX(0);
++    transform: translateY(10px) rotateX(0);
++}
++.tippy-popper[x-placement^=bottom] [data-animation=perspective].leave {
++    opacity: 0;
++    -webkit-transform: translateY(0) rotateX(-90deg);
++    transform: translateY(0) rotateX(-90deg);
++}
++.tippy-popper[x-placement^=left] [data-animation=perspective] {
++    -webkit-transform-origin: right;
++    transform-origin: right;
++}
++.tippy-popper[x-placement^=left] [data-animation=perspective].enter {
++    opacity: 1;
++    -webkit-transform: translateX(-10px) rotateY(0);
++    transform: translateX(-10px) rotateY(0);
++}
++.tippy-popper[x-placement^=left] [data-animation=perspective].leave {
++    opacity: 0;
++    -webkit-transform: translateX(0) rotateY(-90deg);
++    transform: translateX(0) rotateY(-90deg);
++}
++.tippy-popper[x-placement^=right] [data-animation=perspective] {
++    -webkit-transform-origin: left;
++    transform-origin: left;
++}
++.tippy-popper[x-placement^=right] [data-animation=perspective].enter {
++    opacity: 1;
++    -webkit-transform: translateX(10px) rotateY(0);
++    transform: translateX(10px) rotateY(0);
++}
++.tippy-popper[x-placement^=right] [data-animation=perspective].leave {
++    opacity: 0;
++    -webkit-transform: translateX(0) rotateY(90deg);
++    transform: translateX(0) rotateY(90deg);
++}
++.tippy-tooltip {
++    position: relative;
++    color: inherit;
++    border-radius: 4px;
++    padding: .4rem .8rem;
++    text-align: inherit;
++    will-change: transform;
++    -webkit-font-smoothing: antialiased;
++    -moz-osx-font-smoothing: grayscale;
++    background-color: #f2f2f2;
++    box-shadow: 1px 1px 10px #737373;
++}
++.tippy-tooltip[data-animatefill] {
++    overflow: hidden;
++    background-color: #f2f2f2;
++}
++.tippy-tooltip[data-inertia] {
++    transition-timing-function: cubic-bezier(.53, 2, .36, .85);
++}
++.tippy-tooltip [x-arrow] {
++    position: absolute;
++    width: 0;
++    height: 0;
++    background-color: #f2f2f2;
++}
++@media (max-width:450px) {
++    .tippy-popper {
++    max-width: 96%;
++    max-width: calc(100% - 20px);
++}
++}

@@ -1,0 +1,333 @@
+diff --git a/api/serializers.py b/api/serializers.py
+index 9c31804..b7492f8 100644
+--- a/api/serializers.py
++++ b/api/serializers.py
+@@ -84,11 +84,22 @@ class BaseContractSerializer(serializers.ModelSerializer):
+ 
+     def to_representation(self, obj):
+         representation = super(BaseContractSerializer, self).to_representation(obj)
+-        representation['hours_contracted'] = obj.contracted_hours
+-        representation['hours_billed_print'] = obj.hours_billed_print
+-        if obj.contracted_hours:
++        contracted_hours = obj.contracted_hours_datawarehouse(month=self.context['month'],
++                                                              year=self.context['year'])
++        representation['hours_contracted'] = contracted_hours
++        representation['contracted_hours_datawarehouse'] = contracted_hours
++        if self.context['month'] is not None:
++            representation['hours_billed_print'] = obj.hours_billed_print_filtered(
++                                                   year=self.context['year'],
++                                                   month=self.context['month'])
++        else:
++            representation['hours_billed_print'] = obj.hours_billed_print
++        representation['time_billed'] = obj.time_billed(year=self.context['year'],
++                                                        month=self.context['month'])
++        if contracted_hours:
+             representation['hours_percentage'] = int(
+-                100 * (obj.time_billed().total_seconds() / (obj.contracted_hours * 60 * 60.0))
++                100 * (obj.time_billed(month=self.context['month'], year=self.context['year']).
++                       total_seconds() / (contracted_hours * 60 * 60.0))
+             )
+         else:
+             representation['hours_percentage'] = 0
+@@ -521,8 +532,7 @@ class ManageITSerializer(BaseContractSerializer):
+     class Meta:
+         model = Contract
+         fields = (
+-            'contractnumber', 'description', 'status', 'contactname', 'contracttype',
+-            'time_billed', 'hours_billed_print', 'contracted_hours', 'timelogdiscount'
++            'contractnumber', 'description', 'status', 'contactname', 'contracttype', 'timelogdiscount'
+         )
+ 
+     def to_representation(self, obj):
+diff --git a/api/view_sets.py b/api/view_sets.py
+index 70ba72c..2cbcef8 100644
+--- a/api/view_sets.py
++++ b/api/view_sets.py
+@@ -663,7 +663,10 @@ class CustomerViewSet(EnhancedModelViewSet):
+     @detail_route(methods=['get'])
+     def active_contracts(self, request, pk=None):
+         account = Accounts.objects.get(pk=pk)
+-        data = ManageITSerializer(account.active_contracts, many=True).data
++        data = ManageITSerializer(account.active_contracts, many=True, context={
++                                            'year': None,
++                                            'month': None
++                                            }).data
+         return Response(data)
+ 
+     @detail_route(methods=['get'])
+@@ -943,7 +946,27 @@ class ManageITViewSet(BaseTokenAuthViewSet):
+ 
+     @list_route(methods=['get'])
+     def active(self, request, *args, **kwargs):
+-        serializer = ManageITSerializer(self.queryset.filter(status="Active"), many=True)
++        month = None
++        year = None
++        if 'month' and 'year' in request.GET:
++            if request.GET['month'] and request.GET['year'] is not None and not '':
++                try:
++                    month = int(request.GET['month'])
++                    year = int(request.GET['year'])
++                    datetime(year, month, 1)
++                    if year > datetime.now().year or month > 12:
++                        raise ValueError
++                except ValueError:
++                    month = None
++                    year = None
++        else:
++            pass
++        serializer = ManageITSerializer(self.queryset.filter(status="Active"),
++                                        many=True,
++                                        context={
++                                            'year': year,
++                                            'month': month
++                                        })
+         data = serializer.data
+         data.sort(key=lambda x: x.get('customers')[0].get('code') if x.get('customers') else None)
+         return Response(data)
+diff --git a/static/js/board/pages/manage-it.jsx b/static/js/board/pages/manage-it.jsx
+index a12cca9..ab57085 100644
+--- a/static/js/board/pages/manage-it.jsx
++++ b/static/js/board/pages/manage-it.jsx
+@@ -4,7 +4,8 @@ import {ManageITBoard} from './../components/board';
+ 
+ module.exports = function (props) {
+     return (
+-        <ManageITBoard title="ManageIT Contracts" bgColor={props.location.query.bgcolor} color={props.location.query.color} titleFontSize={props.location.query.titlefontsize} fontSize={props.location.query.fontsize} titleType="compact-title" {...props}>
++        <ManageITBoard title="ManageIT Contracts" bgColor={props.location.query.bgcolor} color={props.location.query.color} titleFontSize={props.location.query.titlefontsize} fontSize={props.location.query.fontsize} titleType="compact-title" {...props}
++                        token={props.location.query.token} year={props.location.query.year} month={props.location.query.month}>
+         </ManageITBoard>
+     );
+ };
+\ No newline at end of file
+diff --git a/static/js/contract/actions.js b/static/js/contract/actions.js
+index d8548f5..0a7ab3c 100644
+--- a/static/js/contract/actions.js
++++ b/static/js/contract/actions.js
+@@ -3,12 +3,28 @@ var constants = require('./constants'),
+ 
+ 
+ module.exports = {
+-    fetchManageITContracts: function () {
++    fetchManageITContracts: function (token=0, year=0, month=0) {
++        if (token == 0){
++            /* Retained some logic of the token, since there are some
++                other functions that Trigger fetchManageITContracts,
++                it might need the token. Didn't modify those functions since they are
++                not part of this ticket.(could be removed, if deemed unnecessary)
++            */
++            if(findGetParameter('token') == undefined){
++                //do nothing
++            }
++            else{
++                token  = findGetParameter('token');
++            }
++        }
+         return function (dispatch) {
+             dispatch({type: constants.FETCH_MANAGEIT_CONTRACTS_TRY});
+-            var token = findGetParameter('token');
+             $.ajax({
+                 type: "GET",
++                data: {
++                    year  : year,
++                    month : month
++                },
+                 url: '/api/manageit/active/',
+                 beforeSend: function (xhr) {
+                     xhr.setRequestHeader('Authorization', 'Token ' + token);
+diff --git a/static/js/contract/components/contract-list-desktop.jsx b/static/js/contract/components/contract-list-desktop.jsx
+index d52f3b5..859f577 100644
+--- a/static/js/contract/components/contract-list-desktop.jsx
++++ b/static/js/contract/components/contract-list-desktop.jsx
+@@ -27,7 +27,7 @@ let ContractRow = function (props) {
+             <td>{props.contract.hours_contracted && <HoursProgressBar contract={props.contract} />}</td>
+             <td>
+                 {props.contract.hours_billed_print}
+-                {props.contract.contracted_hours && <span> / {props.contract.contracted_hours}</span>}
++                {props.contract.contracted_hours_datawarehouse && <span> / {props.contract.contracted_hours_datawarehouse}</span>}
+             </td>
+         </tr>
+     );
+diff --git a/static/js/contract/components/contract-list.jsx b/static/js/contract/components/contract-list.jsx
+index 416fd19..75b9e12 100644
+--- a/static/js/contract/components/contract-list.jsx
++++ b/static/js/contract/components/contract-list.jsx
+@@ -40,7 +40,7 @@ let ContractRow = function (props) {
+                 <td>{props.contract.hours_contracted && <HoursProgressBar contract={props.contract} />}</td>
+                 <td>
+                     {props.contract.hours_billed_print}
+-                    {props.contract.contracted_hours && <span> / {props.contract.contracted_hours}</span>}
++                    {props.contract.contracted_hours_datawarehouse && <span> / {props.contract.contracted_hours_datawarehouse}</span>}
+                 </td>
+             </CSSTransitionGroup>
+     );
+@@ -128,7 +128,7 @@ let ContractList = React.createClass({
+     },
+     componentDidMount: function () {
+         document.body.style.backgroundColor = '#' + this.props.location.query.bgcolor;
+-        this.props.fetchManageITContracts();
++        this.props.fetchManageITContracts(this.props.token , this.props.year, this.props.month);
+     },
+     componentDidUpdate: function (prevProps, prevState) {
+         setTimeout(this.initScrollContents, 6000);
+diff --git a/static/js/contract/components/customer-contract-list.jsx b/static/js/contract/components/customer-contract-list.jsx
+index 1b78fab..223b5c7 100644
+--- a/static/js/contract/components/customer-contract-list.jsx
++++ b/static/js/contract/components/customer-contract-list.jsx
+@@ -47,7 +47,7 @@ let ContractRow = addFormValidation(React.createClass({
+                 <td>{c.hours_contracted && <HoursProgressBar contract={c}/>}</td>
+                 <td>
+                     <span className={this.props.allowEdit && "hideOnElementHover"}>
+-                        {c.contracted_hours ? <span>{c.contracted_hours} hours</span> : ''}
++                        {c.contracted_hours_datawarehouse? <span>{c.contracted_hours_datawarehouse} hours</span> : ''}
+                     </span>
+                     {this.props.allowEdit &&
+                     <span className="showOnElementHover">
+@@ -55,27 +55,6 @@ let ContractRow = addFormValidation(React.createClass({
+                         </span>
+                     }
+                 </td>
+-                {this.props.allowEdit &&
+-                <Modal show={this.state.showModal} onHide={this.closeModal}>
+-                    <Modal.Header closeButton>
+-                        <Modal.Title>
+-                            Edit Contracted Hours
+-                        </Modal.Title>
+-                    </Modal.Header>
+-                    <Modal.Body>
+-                        <Form onValid={this.props.enableButton} onInvalid={this.props.disableButton}
+-                              onSubmit={this.submit}>
+-                            <p>Contract "{c.description}" ({c.contractnumber})</p>
+-                            <ValidatedFieldGroup type="hidden" name="contractnumber" value={c.contractnumber}/>
+-                            <ValidatedFieldGroup type="text" validations={positiveNumberValidation} name="hours"
+-                                                 defaultValue={c.contracted_hours} label="Contracted Hours (Monthly)"/>
+-                            <Button type="submit" bsStyle="primary" disabled={!this.props.canSubmit}>
+-                                Save
+-                            </Button>
+-                        </Form>
+-                    </Modal.Body>
+-                </Modal>
+-                }
+             </tr>
+         );
+     }
+@@ -108,7 +87,7 @@ let CustomerContractList = React.createClass({
+                     <ContractRow contract={contract} key={idx} setContractHours={self.setContractHours}
+                                  allowContactEdit={self.props.allowContactEdit}
+                                  assignContact={self.assignContact} fetchContacts={self.fetchContacts}
+-                                 allowEdit={allowEdit} contacts={self.props.customer.contacts}/>
++                                 contacts={self.props.customer.contacts}/>
+                 );
+             });
+         }
+diff --git a/static/js/contract/containers.jsx b/static/js/contract/containers.jsx
+index d1d5163..7941856 100644
+--- a/static/js/contract/containers.jsx
++++ b/static/js/contract/containers.jsx
+@@ -13,8 +13,8 @@ var mapDispatchToProps = function (dispatch) {
+         fetchActiveContractsForCustomer (customerNumber) {
+             dispatch(actions.fetchActiveContractsForCustomer(customerNumber));
+         },
+-        fetchManageITContracts () {
+-            dispatch(actions.fetchManageITContracts());
++        fetchManageITContracts (token, year, month) {
++            dispatch(actions.fetchManageITContracts(token, year, month));
+         },
+         setContractHours (data, customerNumber) {
+             dispatch(actions.setContractHours(data, customerNumber));
+diff --git a/tigerpaw/models.py b/tigerpaw/models.py
+index 21cc1b6..dd6c3ec 100644
+--- a/tigerpaw/models.py
++++ b/tigerpaw/models.py
+@@ -684,35 +684,39 @@ class Contract(models.Model):
+             desc += " | {}".format(self.reference)
+         return desc
+ 
+-    @cached_property
+-    def contracted_hours(self):
+-        from time_management.models import ContractHours
++    # @cached_property
++    # def contracted_hours(self):
++    #     from time_management.models import ContractHours
++    #     try:
++    #         return ContractHours.objects.get(contractnumber=self.contractnumber).hours
++    #     except ContractHours.DoesNotExist:
++    #         return None
++
++    # NB keep these methods as we will probably swap to them
++    def contracted_hours_datawarehouse(self, year=None, month=None):
++        """
++        NB - this number comes from the Data Warehouse and is, apparently, old / inaccurate
++        information. So, we won't use this for now at least. Keeping this here in case it
++        becomes
++        :param year:
++        :param month:
++        :return:
++        """
++        year = year or datetime.date.today().year
++        month = month or datetime.date.today().month
++        sql = """
++        SELECT TOP 1 SUM([EstimatedLabourHours]) AS EstContractLabourHours
++        FROM [BTG_DataWarehouse].[dbo].[ContractsAdditionalDetail]
++        WHERE [ContractYear]={%s} AND [ContractMonth]={%s} AND [ContractNumber]={%s}
++        GROUP BY [AccountNumber];
++        """
++        cursor = connections['data_warehouse'].cursor()
++        cursor.execute(sql, [year, month, self.pk])
+         try:
+-            return ContractHours.objects.get(contractnumber=self.contractnumber).hours
+-        except ContractHours.DoesNotExist:
++            return cursor.fetchone()[0]
++        except TypeError as e:
+             return None
+ 
+-    # NB keep these methods as we will probably swap to them
+-    # def contracted_hours_datawarehouse(self, year=None, month=None):
+-    #     """
+-    #     NB - this number comes from the Data Warehouse and is, apparently, old / inaccurate
+-    #     information. So, we won't use this for now at least. Keeping this here in case it
+-    #     becomes
+-    #     :param year:
+-    #     :param month:
+-    #     :return:
+-    #     """
+-    #     year = year or datetime.date.today().year
+-    #     month = month or datetime.date.today().month
+-    #     sql = """
+-    #     SELECT TOP 1 SUM([EstimatedLabourHours]) AS EstContractLabourHours
+-    #     FROM [BTG_DataWarehouse].[dbo].[ContractsAdditionalDetail]
+-    #     WHERE [ContractYear]={0} AND [ContractMonth]={1} AND [ContractNumber]={2}
+-    #     GROUP BY [AccountNumber];
+-    #     """.format(year, month, self.pk)
+-    #     cursor = connections['data_warehouse'].cursor()
+-    #     cursor.execute(sql)
+-    #     return cursor.fetchone()[0]
+     # def hours_spent_for_account(self, year=None, month=None):
+     #     year = year or datetime.date.today().year
+     #     month = month or datetime.date.today().month
+@@ -731,8 +735,14 @@ class Contract(models.Model):
+     #     return cursor.fetchone()[0]
+     ########################################################################
+ 
+-    def time_billed(self):
+-        start_date = datetime.date.today().replace(day=1)
++    def time_billed(self, month=None, year=None):
++
++        year = year or datetime.date.today().year
++        month = month or datetime.date.today().month
++        if month is not None:
++            start_date = datetime.date.today().replace(day=1, month=month, year=year)
++        else:
++            start_date = datetime.date.today().replace(day=1)
+         range_start = datetime.datetime.combine(start_date, datetime.time.min).replace(tzinfo=pytz.utc)
+         range_end = range_start + relativedelta(months=+1)
+ 
+@@ -759,6 +769,9 @@ class Contract(models.Model):
+         # )
+         return str(round(self.time_billed().total_seconds() / (60.0*60.0), 2))
+ 
++    def hours_billed_print_filtered(self, **kwargs):
++        return str(round(self.time_billed(month=kwargs['month'], year=kwargs['year']).total_seconds() / (60.0*60.0), 2))
++
+     def linked_to_account(self, accountnumber):
+         return ContractCustomers.objects.filter(contractnumber=self.pk, accountnumber=accountnumber).exists()
+ 

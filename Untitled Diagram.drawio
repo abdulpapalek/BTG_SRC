@@ -1,4 +1,4 @@
-<mxfile host="app.diagrams.net" modified="2024-05-17T04:56:54.305Z" agent="Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:125.0) Gecko/20100101 Firefox/125.0" etag="bJoeZWByiLFx5qDtEv-o" version="24.4.0" type="github">
+<mxfile host="app.diagrams.net" modified="2024-05-17T05:22:07.662Z" agent="Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:125.0) Gecko/20100101 Firefox/125.0" etag="GKRsurXlLrYt_K5xxX0G" version="24.4.0" type="github">
   <diagram name="Page-1" id="HTUhq75xzCdrkmpdIbcB">
     <mxGraphModel dx="3772" dy="1114" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="850" pageHeight="1100" math="0" shadow="0">
       <root>
@@ -296,9 +296,13 @@
         <mxCell id="e2aJNaKH90e7Gq9cenqC-15" value="write alert" style="text;html=1;align=center;verticalAlign=middle;resizable=0;points=[];autosize=1;strokeColor=none;fillColor=none;" vertex="1" parent="1">
           <mxGeometry x="-135" y="620" width="80" height="30" as="geometry" />
         </mxCell>
-        <mxCell id="e2aJNaKH90e7Gq9cenqC-30" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;shape=flexArrow;fillColor=#d5e8d4;strokeColor=#82b366;" edge="1" parent="1" source="e2aJNaKH90e7Gq9cenqC-25">
+        <mxCell id="e2aJNaKH90e7Gq9cenqC-30" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;shape=flexArrow;fillColor=#d5e8d4;strokeColor=#82b366;width=2;endSize=8.02;endWidth=18;" edge="1" parent="1" source="e2aJNaKH90e7Gq9cenqC-25">
           <mxGeometry relative="1" as="geometry">
             <mxPoint x="200" y="1352" as="targetPoint" />
+            <Array as="points">
+              <mxPoint x="335" y="1352" />
+              <mxPoint x="335" y="1353" />
+            </Array>
           </mxGeometry>
         </mxCell>
         <mxCell id="e2aJNaKH90e7Gq9cenqC-71" value="Send telemetry" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];" vertex="1" connectable="0" parent="e2aJNaKH90e7Gq9cenqC-30">
@@ -307,7 +311,7 @@
           </mxGeometry>
         </mxCell>
         <mxCell id="e2aJNaKH90e7Gq9cenqC-25" value="bridge-common" style="image;aspect=fixed;html=1;points=[];align=center;fontSize=12;image=img/lib/azure2/containers/App_Services.svg;" vertex="1" parent="1">
-          <mxGeometry x="470" y="1320" width="64" height="64" as="geometry" />
+          <mxGeometry x="437" y="1323" width="64" height="64" as="geometry" />
         </mxCell>
         <mxCell id="e2aJNaKH90e7Gq9cenqC-26" value="actility-webhook" style="image;aspect=fixed;html=1;points=[];align=center;fontSize=12;image=img/lib/azure2/iot/Function_Apps.svg;" vertex="1" parent="1">
           <mxGeometry x="303" y="1120" width="68" height="60" as="geometry" />
@@ -315,14 +319,22 @@
         <mxCell id="e2aJNaKH90e7Gq9cenqC-27" value="Airsuite" style="rounded=1;whiteSpace=wrap;html=1;gradientColor=none;fillStyle=dashed;fillColor=#335CFF;" vertex="1" parent="1">
           <mxGeometry x="-450" y="1100" width="360" height="110" as="geometry" />
         </mxCell>
-        <mxCell id="e2aJNaKH90e7Gq9cenqC-57" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;" edge="1" parent="1">
+        <mxCell id="e2aJNaKH90e7Gq9cenqC-57" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;entryX=0.429;entryY=-0.016;entryDx=0;entryDy=0;entryPerimeter=0;" edge="1" parent="1" target="e2aJNaKH90e7Gq9cenqC-56">
           <mxGeometry relative="1" as="geometry">
             <mxPoint x="103.82999999999986" y="1362.4" as="sourcePoint" />
-            <mxPoint x="-474" y="1630" as="targetPoint" />
+            <mxPoint x="-474" y="1620" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="e2aJNaKH90e7Gq9cenqC-103" style="edgeStyle=none;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;" edge="1" parent="1" source="e2aJNaKH90e7Gq9cenqC-28" target="e2aJNaKH90e7Gq9cenqC-100">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e2aJNaKH90e7Gq9cenqC-104" style="edgeStyle=none;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;" edge="1" parent="1" source="e2aJNaKH90e7Gq9cenqC-28" target="e2aJNaKH90e7Gq9cenqC-99">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="-40" y="1440" as="targetPoint" />
           </mxGeometry>
         </mxCell>
         <mxCell id="e2aJNaKH90e7Gq9cenqC-28" value="Data Ingestion eventhub" style="image;aspect=fixed;html=1;points=[];align=center;fontSize=12;image=img/lib/azure2/analytics/Event_Hubs.svg;" vertex="1" parent="1">
-          <mxGeometry x="102.66" y="1320.0000000000002" width="94.67" height="84.78" as="geometry" />
+          <mxGeometry x="102.66" y="1320" width="97.34" height="87.17" as="geometry" />
         </mxCell>
         <mxCell id="e2aJNaKH90e7Gq9cenqC-29" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;shape=flexArrow;fillColor=#ffe6cc;strokeColor=#d79b00;" edge="1" parent="1" source="e2aJNaKH90e7Gq9cenqC-27">
           <mxGeometry relative="1" as="geometry">
@@ -405,7 +417,7 @@
           </mxGeometry>
         </mxCell>
         <mxCell id="e2aJNaKH90e7Gq9cenqC-56" value="stream-cosmos" style="image;aspect=fixed;html=1;points=[];align=center;fontSize=12;image=img/lib/azure2/iot/Function_Apps.svg;" vertex="1" parent="1">
-          <mxGeometry x="-510" y="1640" width="70" height="61.76" as="geometry" />
+          <mxGeometry x="-310" y="1290" width="70" height="61.76" as="geometry" />
         </mxCell>
         <mxCell id="e2aJNaKH90e7Gq9cenqC-58" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;entryX=1.011;entryY=0.472;entryDx=0;entryDy=0;entryPerimeter=0;" edge="1" parent="1" source="e2aJNaKH90e7Gq9cenqC-56" target="e2aJNaKH90e7Gq9cenqC-46">
           <mxGeometry relative="1" as="geometry" />
@@ -444,8 +456,8 @@
             <mxPoint as="offset" />
           </mxGeometry>
         </mxCell>
-        <mxCell id="e2aJNaKH90e7Gq9cenqC-66" value="&lt;div&gt;&lt;font style=&quot;font-size: 16px;&quot;&gt;POC: Bridge Common write to data ingestion eventhub&lt;/font&gt;&lt;/div&gt;&lt;div&gt;&lt;div style=&quot;font-size: 16px;&quot; align=&quot;left&quot;&gt;&lt;font style=&quot;font-size: 16px;&quot;&gt;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp; &lt;br&gt;&lt;/font&gt;&lt;/div&gt;&lt;div style=&quot;font-size: 16px;&quot; align=&quot;left&quot;&gt;&lt;font style=&quot;font-size: 16px;&quot;&gt;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp; Todo:&amp;nbsp;&lt;/font&gt;&lt;/div&gt;&lt;div style=&quot;font-size: 16px;&quot; align=&quot;left&quot;&gt;&lt;font style=&quot;font-size: 16px;&quot;&gt;&amp;nbsp; &amp;nbsp; &amp;nbsp; &amp;nbsp; &amp;nbsp; &amp;nbsp;&amp;nbsp; - update alert stream to skip efento telemetry(Could be improved in the future).&lt;/font&gt;&lt;/div&gt;&lt;div style=&quot;font-size: 16px;&quot; align=&quot;left&quot;&gt;&lt;font style=&quot;font-size: 16px;&quot;&gt;&lt;br&gt;&lt;/font&gt;&lt;/div&gt;&lt;div style=&quot;font-size: 16px;&quot; align=&quot;left&quot;&gt;&lt;font style=&quot;font-size: 16px;&quot;&gt;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp; - stop bridge-common from writing to the cosmos and&lt;/font&gt;&lt;/div&gt;&lt;div style=&quot;font-size: 16px;&quot; align=&quot;left&quot;&gt;&lt;font style=&quot;font-size: 16px;&quot;&gt;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp; postgres.&lt;/font&gt;&lt;/div&gt;&lt;div style=&quot;font-size: 16px;&quot; align=&quot;left&quot;&gt;&lt;font style=&quot;font-size: 16px;&quot;&gt;&lt;br&gt;&lt;/font&gt;&lt;/div&gt;&lt;div style=&quot;font-size: 16px;&quot; align=&quot;left&quot;&gt;&lt;font style=&quot;font-size: 16px;&quot;&gt;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp; - test how webhook handles efento telemetry.&lt;br&gt;&lt;/font&gt;&lt;/div&gt;&lt;div style=&quot;font-size: 16px;&quot; align=&quot;left&quot;&gt;&lt;font style=&quot;font-size: 16px;&quot;&gt;&lt;br&gt;&lt;/font&gt;&lt;/div&gt;&lt;div style=&quot;font-size: 16px;&quot; align=&quot;left&quot;&gt;&lt;font style=&quot;font-size: 16px;&quot;&gt;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp; - Update webhook to send in batches.&lt;br&gt;&lt;/font&gt;&lt;/div&gt;&lt;div style=&quot;font-size: 16px;&quot; align=&quot;left&quot;&gt;&lt;font style=&quot;font-size: 16px;&quot;&gt;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp; - look into eventhub batch sizes.&lt;br&gt;&lt;/font&gt;&lt;/div&gt;&lt;div style=&quot;font-size: 16px;&quot; align=&quot;left&quot;&gt;&lt;font style=&quot;font-size: 16px;&quot;&gt;&lt;font style=&quot;font-size: 16px;&quot;&gt;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp; &lt;/font&gt;&lt;font style=&quot;font-size: 16px;&quot;&gt;&lt;br&gt;&lt;/font&gt;&lt;/font&gt;&lt;/div&gt;&lt;/div&gt;" style="text;html=1;whiteSpace=wrap;overflow=hidden;rounded=0;" vertex="1" parent="1">
-          <mxGeometry x="360" y="1650" width="490" height="250" as="geometry" />
+        <mxCell id="e2aJNaKH90e7Gq9cenqC-66" value="&lt;div&gt;&lt;font style=&quot;font-size: 16px;&quot;&gt;POC: Bridge Common write to data ingestion eventhub&lt;/font&gt;&lt;/div&gt;&lt;div&gt;&lt;div style=&quot;font-size: 16px;&quot; align=&quot;left&quot;&gt;&lt;font style=&quot;font-size: 16px;&quot;&gt;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp; &lt;br&gt;&lt;/font&gt;&lt;/div&gt;&lt;div style=&quot;font-size: 16px;&quot; align=&quot;left&quot;&gt;&lt;font style=&quot;font-size: 16px;&quot;&gt;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp; Todo:&amp;nbsp;&lt;/font&gt;&lt;/div&gt;&lt;div style=&quot;font-size: 16px;&quot; align=&quot;left&quot;&gt;&lt;font style=&quot;font-size: 16px;&quot;&gt;&amp;nbsp; &amp;nbsp; &amp;nbsp; &amp;nbsp; &amp;nbsp; &amp;nbsp;&amp;nbsp; - update alert stream to skip efento telemetry(Could be improved in the future).&lt;/font&gt;&lt;/div&gt;&lt;div style=&quot;font-size: 16px;&quot; align=&quot;left&quot;&gt;&lt;font style=&quot;font-size: 16px;&quot;&gt;&lt;br&gt;&lt;/font&gt;&lt;/div&gt;&lt;div style=&quot;font-size: 16px;&quot; align=&quot;left&quot;&gt;&lt;font style=&quot;font-size: 16px;&quot;&gt;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp; - stop bridge-common from writing to the cosmos and&lt;/font&gt;&lt;/div&gt;&lt;div style=&quot;font-size: 16px;&quot; align=&quot;left&quot;&gt;&lt;font style=&quot;font-size: 16px;&quot;&gt;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp; postgres.&lt;/font&gt;&lt;/div&gt;&lt;div style=&quot;font-size: 16px;&quot; align=&quot;left&quot;&gt;&lt;font style=&quot;font-size: 16px;&quot;&gt;&lt;br&gt;&lt;/font&gt;&lt;/div&gt;&lt;div style=&quot;font-size: 16px;&quot; align=&quot;left&quot;&gt;&lt;font style=&quot;font-size: 16px;&quot;&gt;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp; - test how webhook handles efento telemetry.&lt;br&gt;&lt;/font&gt;&lt;/div&gt;&lt;div style=&quot;font-size: 16px;&quot; align=&quot;left&quot;&gt;&lt;font style=&quot;font-size: 16px;&quot;&gt;&lt;br&gt;&lt;/font&gt;&lt;/div&gt;&lt;div style=&quot;font-size: 16px;&quot; align=&quot;left&quot;&gt;&lt;font style=&quot;font-size: 16px;&quot;&gt;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp; - Update webhook to send in batches.&lt;br&gt;&lt;/font&gt;&lt;/div&gt;&lt;div style=&quot;font-size: 16px;&quot; align=&quot;left&quot;&gt;&lt;font style=&quot;font-size: 16px;&quot;&gt;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp; - look into eventhub batch sizes.&lt;br&gt;&lt;/font&gt;&lt;/div&gt;&lt;div style=&quot;font-size: 16px;&quot; align=&quot;left&quot;&gt;&lt;font style=&quot;font-size: 16px;&quot;&gt;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp; -&amp;nbsp; different consumer group from node update for the reported state&lt;/font&gt;&lt;/div&gt;&lt;div style=&quot;font-size: 16px;&quot; align=&quot;left&quot;&gt;&lt;font style=&quot;font-size: 16px;&quot;&gt;&lt;br&gt;&lt;/font&gt;&lt;/div&gt;&lt;div style=&quot;font-size: 16px;&quot; align=&quot;left&quot;&gt;&lt;font style=&quot;font-size: 16px;&quot;&gt;&lt;br&gt;&lt;/font&gt;&lt;/div&gt;&lt;div style=&quot;font-size: 16px;&quot; align=&quot;left&quot;&gt;&lt;font style=&quot;font-size: 16px;&quot;&gt;&lt;br&gt;&lt;/font&gt;&lt;/div&gt;&lt;div style=&quot;font-size: 16px;&quot; align=&quot;left&quot;&gt;&lt;font style=&quot;font-size: 16px;&quot;&gt;IoT: &lt;br&gt;&lt;/font&gt;&lt;/div&gt;&lt;div style=&quot;font-size: 16px;&quot; align=&quot;left&quot;&gt;&lt;font style=&quot;font-size: 16px;&quot;&gt;&lt;font style=&quot;font-size: 16px;&quot;&gt;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp; &lt;/font&gt;&lt;font style=&quot;font-size: 16px;&quot;&gt;&lt;br&gt;&lt;/font&gt;&lt;/font&gt;&lt;/div&gt;&lt;/div&gt;" style="text;html=1;whiteSpace=wrap;overflow=hidden;rounded=0;" vertex="1" parent="1">
+          <mxGeometry x="410" y="1549.5" width="580" height="430" as="geometry" />
         </mxCell>
         <mxCell id="e2aJNaKH90e7Gq9cenqC-72" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;entryX=1.015;entryY=0.2;entryDx=0;entryDy=0;entryPerimeter=0;" edge="1" parent="1" source="mnNxy6jQzhcaSt8DhOdr-4" target="e2aJNaKH90e7Gq9cenqC-8">
           <mxGeometry relative="1" as="geometry" />
@@ -488,6 +500,58 @@
         </mxCell>
         <mxCell id="e2aJNaKH90e7Gq9cenqC-97" value="Writes Lora/NB-IOT/LTE" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];fontSize=13;fontStyle=1" vertex="1" connectable="0" parent="1">
           <mxGeometry x="170.00000000000017" y="1690" as="geometry" />
+        </mxCell>
+        <mxCell id="e2aJNaKH90e7Gq9cenqC-99" value="Stream data" style="image;aspect=fixed;html=1;points=[];align=center;fontSize=12;image=img/lib/azure2/iot/Function_Apps.svg;" vertex="1" parent="1">
+          <mxGeometry x="30.650000000000006" y="1180" width="79.35" height="70" as="geometry" />
+        </mxCell>
+        <mxCell id="e2aJNaKH90e7Gq9cenqC-100" value="Batch Data" style="image;aspect=fixed;html=1;points=[];align=center;fontSize=12;image=img/lib/azure2/iot/Function_Apps.svg;" vertex="1" parent="1">
+          <mxGeometry x="-70.02000000000002" y="1220" width="79.35" height="70" as="geometry" />
+        </mxCell>
+        <mxCell id="e2aJNaKH90e7Gq9cenqC-105" style="edgeStyle=none;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;entryX=1.021;entryY=0.952;entryDx=0;entryDy=0;entryPerimeter=0;" edge="1" parent="1" source="e2aJNaKH90e7Gq9cenqC-34" target="e2aJNaKH90e7Gq9cenqC-28">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e2aJNaKH90e7Gq9cenqC-108" style="edgeStyle=none;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;" edge="1" parent="1" source="e2aJNaKH90e7Gq9cenqC-106" target="e2aJNaKH90e7Gq9cenqC-107">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e2aJNaKH90e7Gq9cenqC-106" value="Data Ingestion eventhub" style="image;aspect=fixed;html=1;points=[];align=center;fontSize=12;image=img/lib/azure2/analytics/Event_Hubs.svg;" vertex="1" parent="1">
+          <mxGeometry x="105.66" y="2111" width="97.34" height="87.17" as="geometry" />
+        </mxCell>
+        <mxCell id="e2aJNaKH90e7Gq9cenqC-107" value="bridge-common" style="image;aspect=fixed;html=1;points=[];align=center;fontSize=12;image=img/lib/azure2/containers/App_Services.svg;" vertex="1" parent="1">
+          <mxGeometry x="122.33" y="2280" width="64" height="64" as="geometry" />
+        </mxCell>
+        <mxCell id="e2aJNaKH90e7Gq9cenqC-119" style="edgeStyle=none;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;" edge="1" parent="1" source="e2aJNaKH90e7Gq9cenqC-111" target="e2aJNaKH90e7Gq9cenqC-106">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e2aJNaKH90e7Gq9cenqC-111" value="actility-webhook" style="image;aspect=fixed;html=1;points=[];align=center;fontSize=12;image=img/lib/azure2/iot/Function_Apps.svg;" vertex="1" parent="1">
+          <mxGeometry x="122.33" y="1990" width="68" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="e2aJNaKH90e7Gq9cenqC-118" style="edgeStyle=none;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;" edge="1" parent="1" source="e2aJNaKH90e7Gq9cenqC-112" target="e2aJNaKH90e7Gq9cenqC-106">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e2aJNaKH90e7Gq9cenqC-112" value="Airsuite" style="rounded=1;whiteSpace=wrap;html=1;gradientColor=none;fillStyle=dashed;fillColor=#335CFF;" vertex="1" parent="1">
+          <mxGeometry x="-460" y="2070" width="360" height="110" as="geometry" />
+        </mxCell>
+        <mxCell id="e2aJNaKH90e7Gq9cenqC-113" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;" edge="1" parent="1" target="e2aJNaKH90e7Gq9cenqC-114">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="590" y="2135" as="sourcePoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="e2aJNaKH90e7Gq9cenqC-114" value="iothub" style="image;sketch=0;aspect=fixed;html=1;points=[];align=center;fontSize=12;image=img/lib/mscae/Azure_IoT_Hub.svg;strokeColor=#0A0A0A;" vertex="1" parent="1">
+          <mxGeometry x="480" y="2100" width="70" height="70" as="geometry" />
+        </mxCell>
+        <mxCell id="e2aJNaKH90e7Gq9cenqC-115" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;shape=flexArrow;fillColor=#d5e8d4;strokeColor=#82b366;" edge="1" parent="1" source="e2aJNaKH90e7Gq9cenqC-117" target="e2aJNaKH90e7Gq9cenqC-114">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e2aJNaKH90e7Gq9cenqC-116" value="AMQP" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];" vertex="1" connectable="0" parent="e2aJNaKH90e7Gq9cenqC-115">
+          <mxGeometry x="0.1455" y="4" relative="1" as="geometry">
+            <mxPoint as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="e2aJNaKH90e7Gq9cenqC-117" value="Tartabit(LTE/NB-IoT)" style="image;sketch=0;aspect=fixed;html=1;points=[];align=center;fontSize=12;image=img/lib/mscae/Kubernetes.svg;" vertex="1" parent="1">
+          <mxGeometry x="680" y="2111" width="50" height="48" as="geometry" />
+        </mxCell>
+        <mxCell id="e2aJNaKH90e7Gq9cenqC-120" style="edgeStyle=none;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;entryX=0.99;entryY=0.47;entryDx=0;entryDy=0;entryPerimeter=0;" edge="1" parent="1" source="e2aJNaKH90e7Gq9cenqC-114" target="e2aJNaKH90e7Gq9cenqC-106">
+          <mxGeometry relative="1" as="geometry" />
         </mxCell>
       </root>
     </mxGraphModel>

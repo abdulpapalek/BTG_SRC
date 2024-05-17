@@ -1,4 +1,4 @@
-<mxfile host="app.diagrams.net" modified="2024-05-17T03:59:51.887Z" agent="Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:125.0) Gecko/20100101 Firefox/125.0" etag="MdDMvq_wyKrF4IAxbsMj" version="24.4.0" type="github">
+<mxfile host="app.diagrams.net" modified="2024-05-17T04:00:54.706Z" agent="Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:125.0) Gecko/20100101 Firefox/125.0" etag="bdGbSk-6L9fw4PSLD19o" version="24.4.0" type="github">
   <diagram name="Page-1" id="HTUhq75xzCdrkmpdIbcB">
     <mxGraphModel dx="3772" dy="1102" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="850" pageHeight="1100" math="0" shadow="0">
       <root>
@@ -378,9 +378,6 @@
             </Array>
           </mxGeometry>
         </mxCell>
-        <mxCell id="e2aJNaKH90e7Gq9cenqC-42" value="telemetry" style="image;aspect=fixed;html=1;points=[];align=center;fontSize=12;image=img/lib/azure2/iot/Function_Apps.svg;" vertex="1" parent="1">
-          <mxGeometry x="110.32" y="1550" width="79.35" height="70" as="geometry" />
-        </mxCell>
         <mxCell id="e2aJNaKH90e7Gq9cenqC-43" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;entryX=0.513;entryY=-0.014;entryDx=0;entryDy=0;entryPerimeter=0;shape=flexArrow;" edge="1" parent="1" source="e2aJNaKH90e7Gq9cenqC-28" target="e2aJNaKH90e7Gq9cenqC-42">
           <mxGeometry relative="1" as="geometry" />
         </mxCell>
@@ -482,6 +479,12 @@
         </mxCell>
         <mxCell id="e2aJNaKH90e7Gq9cenqC-88" value="Send telemetry" style="text;html=1;align=center;verticalAlign=middle;resizable=0;points=[];autosize=1;strokeColor=none;fillColor=none;" vertex="1" parent="1">
           <mxGeometry x="-660" y="762.94" width="100" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="e2aJNaKH90e7Gq9cenqC-93" value="" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#d80073;fontColor=#ffffff;strokeColor=#A50040;" vertex="1" parent="1">
+          <mxGeometry x="-1060" y="1060" width="2470" height="29" as="geometry" />
+        </mxCell>
+        <mxCell id="e2aJNaKH90e7Gq9cenqC-42" value="telemetry" style="image;aspect=fixed;html=1;points=[];align=center;fontSize=12;image=img/lib/azure2/iot/Function_Apps.svg;" vertex="1" parent="1">
+          <mxGeometry x="110.32" y="1550" width="79.35" height="70" as="geometry" />
         </mxCell>
       </root>
     </mxGraphModel>
